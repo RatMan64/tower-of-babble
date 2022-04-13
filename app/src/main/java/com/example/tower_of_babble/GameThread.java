@@ -37,11 +37,11 @@ public class GameThread extends Thread{
     @Override
     public void run() {
         // todo handle exceptions gracefully
-        try {
-            setup();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            setup();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
         long startTime = System.nanoTime();
 

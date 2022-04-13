@@ -8,6 +8,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import jdk.jfr.Event;
+
 public class GameServer {
     public ConcurrentLinkedQueue<Event> in_events;
     public ConcurrentLinkedQueue<Event> out_events;
