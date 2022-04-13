@@ -1,0 +1,21 @@
+plugins {
+    id 'application'
+}
+application {
+    mainClass = "com.example.server.GameServer"
+}
+
+
+jar {
+  manifest {
+    attributes('Main-Class': 'com.example.server.GameServer')
+  }
+}
+task myrun(type: JavaExec){
+    group = "Run"
+    classpath = files("build/libs/server.jar")
+}
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
