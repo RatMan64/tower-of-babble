@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -23,14 +22,12 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void update()  {
-//        this.chibi1.update();
     }
 
     @Override
     public void draw(Canvas canvas)  {
         super.draw(canvas);
 
-//        this.chibi1.draw(canvas);
         canvas.drawBitmap(tbm, 100, 100, null);
     }
 
