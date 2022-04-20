@@ -9,14 +9,17 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import java.util.ArrayList;
+
 public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     private GameThread gameThread;
-    public Bitmap tbm;
+
+    ArrayList<ArrayList<GameObject>> map = new ArrayList<>();
+
+    Camera cam = new Camera();
 
     private int prevX = 0;
     private int prevY = 0;
-    private int offsetX = 0;
-    private int offsetY = 0;
 
     public GameSurface(Context context)  {
         super(context);
@@ -49,8 +52,8 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
                 prevX = currX;
                 prevY = currY;
 
-                offsetX += deltaX;
-                offsetY += deltaY;
+
+                cam.move(deltaX, deltaY);
                 Log.d("MOVE", "It moved.");
                 return true;
             }
@@ -65,20 +68,32 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void draw(Canvas canvas)  {
         super.draw(canvas);
-
-        canvas.drawBitmap(tbm, offsetX, offsetY, null);
+        for(ArrayList<GameObject> arr : map) {
+            for(GameObject g : arr) {
+                g.draw(canvas, cam);
+            }
+        }
     }
 
     // Implements method of SurfaceHolder.Callback
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
 
-        Bitmap b = BitmapFactory.decodeResource(this.getResources(),R.drawable.grassblock);
-        tbm = Bitmap.createScaledBitmap(b, 120, 120, false);
+        Bitmap b = BitmapFactory.decodeResource(this.getResources(),R.drawable.empty_plot);
+        Bitmap scaledB = Bitmap.createScaledBitmap(b, 120, 120, false);
 
         this.gameThread = new GameThread(this,holder);
         this.gameThread.setRunning(true);
         this.gameThread.start();
+
+        for(int i = 0; i != 100; ++i) {
+            map.add(new ArrayList<>());
+            for(int j = 0; j != 100; ++j) {
+                GameObject g = new GameObject(i, j, 120, 120);
+                map.get(i).add(g);
+                g.setBmp(scaledB);
+            }
+        }
     }
 
     // Implements method of SurfaceHolder.Callback
