@@ -6,13 +6,19 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+
+
 public class GameServer {
+    public final int MAX_TILE_AGE = 10;
+
     public ConcurrentLinkedQueue<Event> in_events;
     public ConcurrentLinkedQueue<Event> out_events;
     public ArrayList<ObjectOutputStream> out_streams;
     public ArrayList<Socket> conns;
+    public HashMap<Point, Tile> tile_list;
     public int client_id = 0;
 
     public GameServer() throws IOException {
@@ -20,6 +26,7 @@ public class GameServer {
         out_events = new ConcurrentLinkedQueue<>();
         out_streams = new ArrayList<>();
         conns = new ArrayList<>();
+        tile_list = new HashMap<>();
 
         ServerSocket s = new ServerSocket(8989);
 
@@ -91,5 +98,61 @@ public class GameServer {
 
     private void handle_event(Event e){
 
+    }
+
+    private class Tile {
+        private long age;
+        public int owner_id;
+
+        public Tile(int owner_id) {
+            this.age = 0;
+            this.owner_id = owner_id;
+        }
+
+        public Tile(long age, int owner_id) {
+            this.age = age;
+            this.owner_id = owner_id;
+        }
+
+        long getAge() { return this.age; }
+
+        void increaseAge(long time) {
+            if ( this.age < MAX_TILE_AGE )
+                this.age += time;
+        }
+
+    }
+
+    private class Point implements Comparable<Point> {
+        public int x;
+        public int y;
+
+        public Point(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        @Override
+        public Boolean equals(Point point) {
+            return (this.x == point.x &&
+                    this.y == point.y);
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 17;
+            hash = hash * 31 + x;
+            hash = hash * 31 + y;
+            return hash;
+        }
+
+        @Override
+        public int compareTo(Point point){
+            if (this.x - point.x != 0) {
+                return (this.x - point.x);
+            } else {
+                return (this.y - point.y);
+            }
+        }
     }
 }
