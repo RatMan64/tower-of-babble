@@ -6,11 +6,11 @@ import android.graphics.Canvas;
 public class GameObject {
     private float x;
     private float y;
-    private float width;
-    private float height;
+    private int width;
+    private int height;
     private Bitmap bmp;
 
-    public GameObject(float x_, float y_, float width_, float height_) {
+    public GameObject(float x_, float y_, int width_, int height_) {
         this.x = x_;
         this.y = y_;
         this.width = width_;
@@ -19,10 +19,34 @@ public class GameObject {
     }
 
     public void setBmp(Bitmap bmp) {
-        this.bmp = bmp;
+        this.bmp = Bitmap.createScaledBitmap(bmp,width * 10, height * 10, false);
     }
 
     void draw(Canvas canvas, Camera cam) {
-        canvas.drawBitmap(bmp, cam.getX() + x * width, cam.getY() + y * height, null);
+        canvas.drawBitmap(bmp, cam.getX() + x, cam.getY() + y, null);
+    }
+
+    float getX() {
+        return this.x;
+    }
+
+    float getY() {
+        return this.y;
+    }
+
+    void setX(float x_) {
+        x = x_;
+    }
+
+    void setY(float y_) {
+        y = y_;
+    }
+
+    float getWidth() {
+        return width;
+    }
+
+    float getHeight() {
+        return height;
     }
 }

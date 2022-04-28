@@ -14,9 +14,10 @@ import java.util.ArrayList;
 public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     private GameThread gameThread;
 
-    ArrayList<ArrayList<GameObject>> map = new ArrayList<>();
+    ArrayList<MenuOption> menu = new ArrayList<>();
 
     Camera cam = new Camera();
+    Camera menuCam = new Camera();
 
     private int prevX = 0;
     private int prevY = 0;
@@ -40,6 +41,15 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
             case MotionEvent.ACTION_DOWN: {
                 prevX =  (int)event.getX();
                 prevY = (int)event.getY();
+                for(MenuOption opt : menu) {
+                    if(opt.tryClick(prevX, prevY)) {
+                        for(MenuOption otherOpt : menu) {
+                            if(otherOpt != opt) {
+                                otherOpt.unselect();
+                            }
+                        }
+                    }
+                }
                 Log.d("DOWN", "it's down");
                 return true;
             }
@@ -68,10 +78,8 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void draw(Canvas canvas)  {
         super.draw(canvas);
-        for(ArrayList<GameObject> arr : map) {
-            for(GameObject g : arr) {
-                g.draw(canvas, cam);
-            }
+        for(MenuOption frame : menu) {
+            frame.draw(canvas, menuCam);
         }
     }
 
@@ -79,21 +87,53 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
 
-        Bitmap b = BitmapFactory.decodeResource(this.getResources(),R.drawable.empty_plot);
-        Bitmap scaledB = Bitmap.createScaledBitmap(b, 120, 120, false);
+        Bitmap frame = BitmapFactory.decodeResource(this.getResources(), R.drawable.frame);
+
+        MenuOption firstOption = new MenuOption(this, 100, 10);
+
+        Bitmap twr2Aimg = BitmapFactory.decodeResource(this.getResources(), R.drawable.tower_2a);
+        GameObject twr2Aobj = new GameObject(0, 0, 16, 16);
+        twr2Aobj.setBmp(twr2Aimg);
+        firstOption.addOption(twr2Aobj);
+
+        Bitmap twr2Bimg = BitmapFactory.decodeResource(this.getResources(), R.drawable.tower_2b);
+        GameObject twr2Bobj = new GameObject(0, 0, 16, 16);
+        twr2Bobj.setBmp(twr2Bimg);
+        firstOption.addOption(twr2Bobj);
+
+        Bitmap twr2Cimg = BitmapFactory.decodeResource(this.getResources(), R.drawable.tower_2c);
+        GameObject twr2Cobj = new GameObject(0, 0, 16, 16);
+        twr2Cobj.setBmp(twr2Cimg);
+        firstOption.addOption(twr2Cobj);
+
+        menu.add(firstOption);
+
+        MenuOption secondOption = new MenuOption(this, 400, 10);
+
+        Bitmap twr3Aimg = BitmapFactory.decodeResource(this.getResources(), R.drawable.tower_3a);
+        GameObject twr3Aobj = new GameObject(0, 0, 16, 16);
+        twr3Aobj.setBmp(twr3Aimg);
+        secondOption.addOption(twr3Aobj);
+
+        Bitmap twr3Bimg = BitmapFactory.decodeResource(this.getResources(), R.drawable.tower_3b);
+        GameObject twr3Bobj = new GameObject(0, 0, 16, 16);
+        twr3Bobj.setBmp(twr3Bimg);
+        secondOption.addOption(twr3Bobj);
+
+        menu.add(secondOption);
+
+        MenuOption thirdOption = new MenuOption(this, 700, 10);
+
+        Bitmap twr4Aimg = BitmapFactory.decodeResource(this.getResources(), R.drawable.tower_4a);
+        GameObject twr4Aobj = new GameObject(0, 0, 16, 16);
+        twr4Aobj.setBmp(twr4Aimg);
+        thirdOption.addOption(twr4Aobj);
+
+        menu.add(thirdOption);
 
         this.gameThread = new GameThread(this,holder);
         this.gameThread.setRunning(true);
         this.gameThread.start();
-
-        for(int i = 0; i != 100; ++i) {
-            map.add(new ArrayList<>());
-            for(int j = 0; j != 100; ++j) {
-                GameObject g = new GameObject(i, j, 120, 120);
-                map.get(i).add(g);
-                g.setBmp(scaledB);
-            }
-        }
     }
 
     // Implements method of SurfaceHolder.Callback
