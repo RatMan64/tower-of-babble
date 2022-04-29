@@ -39,6 +39,12 @@ public class MenuOption {
         optionCount++;
     }
 
+    public boolean selected(){return selected;}
+
+    public GameObject current_selection(){
+        return options.get(currentOption);
+    }
+
     public void unselect() {
         selected = false;
     }
