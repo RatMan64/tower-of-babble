@@ -8,12 +8,21 @@ import android.view.SurfaceView;
 import java.util.ArrayList;
 
 public class MenuOption {
+    private class SubOption {
+        private String tag;
+        private GameObject img;
+
+        public SubOption(String tag_, GameObject img_) {
+            tag = tag_;
+            img = img_;
+        }
+    }
     private final int MagicScaleX = 10;
     private final int MagicScaleY = 10;
 
     private GameObject frame;
     private int currentOption;
-    private ArrayList<GameObject> options;
+    private ArrayList<SubOption> options;
     private int optionCount;
     private boolean selected;
 
@@ -32,17 +41,17 @@ public class MenuOption {
         y = y_;
     }
 
-    public void addOption(GameObject image) {
+    public void addSubOption(String tag, GameObject image) {
         image.setX(x + 2 * MagicScaleX);
         image.setY(y + 2 * MagicScaleY);
-        options.add(image);
+        options.add(new SubOption(tag, image));
         optionCount++;
     }
 
     public boolean selected(){return selected;}
 
-    public GameObject current_selection(){
-        return options.get(currentOption);
+    public String currSelectedTag(){
+        return options.get(currentOption).tag;
     }
 
     public void unselect() {
@@ -60,16 +69,14 @@ public class MenuOption {
     public void click() {
         if(!selected) {
             selected = true;
-            Log.d("click", "slected");
 ;        } else {
             ++currentOption;
             currentOption %= optionCount;
-            Log.d("click", "swapped");
         }
     }
 
     public void draw(Canvas canvas, Camera camera) {
         frame.draw(canvas, camera);
-        options.get(currentOption).draw(canvas, camera);
+        options.get(currentOption).img.draw(canvas, camera);
     }
 }

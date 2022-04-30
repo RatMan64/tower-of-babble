@@ -4,10 +4,13 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.os.Build;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
+import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
 
@@ -15,8 +18,12 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     private GameThread gameThread;
 
     ArrayList<MenuOption> menu = new ArrayList<>();
-    ArrayList<GameObject> grid = new ArrayList<>();
+    World world = new World(10, 10, this);
     MenuOption last;
+    String currentSelectedTag;
+
+    // track if the user panned the camera.
+    boolean moved;
 
     Camera cam = new Camera();
     Camera menuCam = new Camera();
@@ -37,31 +44,14 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     public void update()  {
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction() & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN: {
                 prevX =  (int)event.getX();
                 prevY = (int)event.getY();
-
-                menu.stream()
-                        .filter(o -> !o.tryClick(prevX, prevY))
-                        .forEach(MenuOption::unselect);
-
-                menu.stream()
-                        .filter(MenuOption::selected)
-                        .findFirst()
-                        .ifPresent(mo ->  last = mo);
-
-                if(last != null && !last.selected()){
-                    var go = new GameObject(
-                            (prevX - cam.getX()) - ((prevX - cam.getX())%160),
-                            (prevY - cam.getY()) - ((prevY - cam.getY())%160),
-                            16, 16,
-                            last.current_selection().getBmp());
-                    grid.add(go);
-                }
-                Log.d("DOWN", "it's down");
+                moved = false;
                 return true;
             }
             case MotionEvent.ACTION_MOVE: {
@@ -69,17 +59,38 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
                 int currY = (int)event.getY();
                 int deltaX = currX - prevX;
                 int deltaY = currY - prevY;
-                Log.d("DELTA", "x: " + deltaX + ", y: " + deltaY);
                 prevX = currX;
                 prevY = currY;
 
 
                 cam.move(deltaX, deltaY);
-                Log.d("MOVE", "It moved.");
+                moved = true;
                 return true;
             }
             case MotionEvent.ACTION_UP: {
-                Log.d("UP", "Its up.");
+                if(!moved) {
+                    int upX = (int) event.getX();
+                    int upY = (int) event.getY();
+                    menu.stream()
+                            .filter(o -> !o.tryClick(upX, upY))
+                            .forEach(MenuOption::unselect);
+
+                    menu.stream()
+                            .filter(MenuOption::selected)
+                            .findFirst()
+                            .ifPresent(mo -> last = mo);
+
+                    if(last != null) {
+                        currentSelectedTag = last.currSelectedTag();
+
+                        // imgs are 160 pixels across... this is really bad practice lol
+                        int worldX = (int) (upX - cam.getX()) / 160;
+                        int worldY = (int) (upY - cam.getY()) / 160;
+                        if(worldX >= 0 && worldX < 10 && worldY >= 0 && worldY < 10) {
+                            world.tryPlaceTile(worldX, worldY, currentSelectedTag);
+                        }
+                    }
+                }
                 return true;
             }
         }
@@ -92,8 +103,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
         for(MenuOption frame : menu) {
             frame.draw(canvas, menuCam);
         }
-        for(GameObject o : grid)
-            o.draw(canvas, cam);
+        world.draw(canvas, cam);
     }
 
     // Implements method of SurfaceHolder.Callback
@@ -106,17 +116,17 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
         Bitmap twr2Aimg = BitmapFactory.decodeResource(this.getResources(), R.drawable.tower_2a);
         GameObject twr2Aobj = new GameObject(0, 0, 16, 16);
         twr2Aobj.setBmp(twr2Aimg);
-        firstOption.addOption(twr2Aobj);
+        firstOption.addSubOption("2a", twr2Aobj);
 
         Bitmap twr2Bimg = BitmapFactory.decodeResource(this.getResources(), R.drawable.tower_2b);
         GameObject twr2Bobj = new GameObject(0, 0, 16, 16);
         twr2Bobj.setBmp(twr2Bimg);
-        firstOption.addOption(twr2Bobj);
+        firstOption.addSubOption("2b", twr2Bobj);
 
         Bitmap twr2Cimg = BitmapFactory.decodeResource(this.getResources(), R.drawable.tower_2c);
         GameObject twr2Cobj = new GameObject(0, 0, 16, 16);
         twr2Cobj.setBmp(twr2Cimg);
-        firstOption.addOption(twr2Cobj);
+        firstOption.addSubOption("2c", twr2Cobj);
 
         menu.add(firstOption);
 
@@ -125,12 +135,12 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
         Bitmap twr3Aimg = BitmapFactory.decodeResource(this.getResources(), R.drawable.tower_3a);
         GameObject twr3Aobj = new GameObject(0, 0, 16, 16);
         twr3Aobj.setBmp(twr3Aimg);
-        secondOption.addOption(twr3Aobj);
+        secondOption.addSubOption("3a", twr3Aobj);
 
         Bitmap twr3Bimg = BitmapFactory.decodeResource(this.getResources(), R.drawable.tower_3b);
         GameObject twr3Bobj = new GameObject(0, 0, 16, 16);
         twr3Bobj.setBmp(twr3Bimg);
-        secondOption.addOption(twr3Bobj);
+        secondOption.addSubOption("3b", twr3Bobj);
 
         menu.add(secondOption);
 
@@ -139,7 +149,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
         Bitmap twr4Aimg = BitmapFactory.decodeResource(this.getResources(), R.drawable.tower_4a);
         GameObject twr4Aobj = new GameObject(0, 0, 16, 16);
         twr4Aobj.setBmp(twr4Aimg);
-        thirdOption.addOption(twr4Aobj);
+        thirdOption.addSubOption("4a", twr4Aobj);
 
         menu.add(thirdOption);
 

@@ -20,7 +20,7 @@ public class GameObject {
 
     public GameObject(float x_, float y_, int width_, int height_, Bitmap bmp) {
         this(x_, y_, width_, height_);
-        this.bmp = bmp;
+        this.bmp = Bitmap.createScaledBitmap(bmp,width * 10, height * 10, false);
     }
 
     public void setBmp(Bitmap bmp) {
