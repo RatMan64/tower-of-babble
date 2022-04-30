@@ -9,6 +9,7 @@
 - [ ] Add networking to top menu items
 
 ### World
-- [ ] Add world class
-- [ ] Add interface for placing tiles
+- [X] Add world class
+- [X] Add interface for placing tiles
 - [ ] Add interface for rendering world
+- [ ] DEBUG
