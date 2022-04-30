@@ -15,6 +15,8 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     private GameThread gameThread;
 
     ArrayList<MenuOption> menu = new ArrayList<>();
+    ArrayList<GameObject> grid = new ArrayList<>();
+    MenuOption last;
 
     Camera cam = new Camera();
     Camera menuCam = new Camera();
@@ -41,14 +43,23 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
             case MotionEvent.ACTION_DOWN: {
                 prevX =  (int)event.getX();
                 prevY = (int)event.getY();
-                for(MenuOption opt : menu) {
-                    if(opt.tryClick(prevX, prevY)) {
-                        for(MenuOption otherOpt : menu) {
-                            if(otherOpt != opt) {
-                                otherOpt.unselect();
-                            }
-                        }
-                    }
+
+                menu.stream()
+                        .filter(o -> !o.tryClick(prevX, prevY))
+                        .forEach(MenuOption::unselect);
+
+                menu.stream()
+                        .filter(MenuOption::selected)
+                        .findFirst()
+                        .ifPresent(mo ->  last = mo);
+
+                if(last != null && !last.selected()){
+                    var go = new GameObject(
+                            (prevX - cam.getX()) - ((prevX - cam.getX())%160),
+                            (prevY - cam.getY()) - ((prevY - cam.getY())%160),
+                            16, 16,
+                            last.current_selection().getBmp());
+                    grid.add(go);
                 }
                 Log.d("DOWN", "it's down");
                 return true;
@@ -81,12 +92,13 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
         for(MenuOption frame : menu) {
             frame.draw(canvas, menuCam);
         }
+        for(GameObject o : grid)
+            o.draw(canvas, cam);
     }
 
     // Implements method of SurfaceHolder.Callback
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-
         Bitmap frame = BitmapFactory.decodeResource(this.getResources(), R.drawable.frame);
 
         MenuOption firstOption = new MenuOption(this, 100, 10);
@@ -130,6 +142,9 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
         thirdOption.addOption(twr4Aobj);
 
         menu.add(thirdOption);
+
+
+
 
         this.gameThread = new GameThread(this,holder);
         this.gameThread.setRunning(true);

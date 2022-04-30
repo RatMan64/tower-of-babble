@@ -18,9 +18,16 @@ public class GameObject {
         this.bmp = null;
     }
 
+    public GameObject(float x_, float y_, int width_, int height_, Bitmap bmp) {
+        this(x_, y_, width_, height_);
+        this.bmp = bmp;
+    }
+
     public void setBmp(Bitmap bmp) {
         this.bmp = Bitmap.createScaledBitmap(bmp,width * 10, height * 10, false);
     }
+
+    public Bitmap getBmp(){return bmp;}
 
     void draw(Canvas canvas, Camera cam) {
         canvas.drawBitmap(bmp, cam.getX() + x, cam.getY() + y, null);
