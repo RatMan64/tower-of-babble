@@ -45,7 +45,10 @@ public class GameServer {
                 if (e == null) continue;
                 for(ObjectOutputStream oos : out_streams){
                     try {
-                        oos.writeObject(e);
+                        //oos.writeInt(e.type);
+                        oos.writeInt(e.point.x);
+                        oos.writeInt(e.point.y);
+                        oos.writeInt(e.tile.owner_id);
                         oos.flush();
                     } catch (IOException ex) {
                         ex.printStackTrace();
@@ -108,13 +111,18 @@ public class GameServer {
             //TODO: proper time handling
 //            update_tiles(Instant.now().toEpochMilli());
 
-            for(Event ge = in_events.poll(); ge != null; ge = in_events.poll())
-                handle_event(ge);
+            for(Event e = in_events.poll(); e != null; e = in_events.poll())
+                handle_event(e);
         }
     }
 
-    public void handle_event(Event ge) {
-
+    public void handle_event(Event e) {
+        switch(e.type) {
+            case PiecePlaced: {
+                out_events.add(e);
+            }
+            default: return;
+        }
     }
 
     public Event getEventFromStream(int cid, ObjectInputStream ois) throws IOException, ClassNotFoundException {
