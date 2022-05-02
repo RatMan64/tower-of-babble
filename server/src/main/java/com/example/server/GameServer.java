@@ -8,8 +8,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-
+import java.time.Duration;
+import java.time.Instant;
 
 public class GameServer {
     public final int MAX_TILE_AGE = 10;
@@ -87,17 +87,34 @@ public class GameServer {
 
 
     public void run(){
+        Instant lastTime = Instant.now();
         while (true){
+            Instant newTime = Instant.now();
+            long diff = Duration.between(lastTime, newTime).toMillis();
+            lastTime = newTime;
+
             for(Event e = in_events.poll(); e != null; e = in_events.poll())
                 handle_event(e);
 
-
+            update_tiles(diff);
 
         }
     }
 
     private void handle_event(Event e){
 
+    }
+
+    private void update_tiles(long diff) {
+        for (Map.Entry<Point, Tile> entry : tile_list.entrySet()) {
+            Point key = entry.getKey();
+            Tile value = entry.getValue();
+
+            if (value.increaseAge(diff)) {
+                // TODO: push permanent tile set event
+                System.out.println("tile at " + key.toString() + " became permanent");
+            }
+        }
     }
 
     private class Tile {
@@ -116,9 +133,12 @@ public class GameServer {
 
         long getAge() { return this.age; }
 
-        void increaseAge(long time) {
-            if ( this.age < MAX_TILE_AGE )
+        boolean increaseAge(long time) {
+            if ( this.age < MAX_TILE_AGE ) {
                 this.age += time;
+                return (this.age >= MAX_TILE_AGE);
+            }
+            return false;
         }
 
     }
@@ -153,6 +173,10 @@ public class GameServer {
             } else {
                 return (this.y - point.y);
             }
+        }
+
+        public String toString() {
+            return ("<" + this.x + ", " + this.y + ">");
         }
     }
 }
