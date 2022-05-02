@@ -7,6 +7,7 @@ public class Tile {
     private long age;
     public final int owner_id;
     public boolean is_placed;
+    public String tile_type;
 
     public static final int MAX_TILE_AGE = 10;
 
@@ -18,6 +19,7 @@ public class Tile {
     public Tile(Object[] args){
         age = (Long) args[0];
         owner_id = (int) args[1];
+        tile_type = (String) args[2];
 
     }
 
