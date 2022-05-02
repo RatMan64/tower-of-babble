@@ -126,7 +126,7 @@ public class GameServer {
     }
 
     public Event getEventFromStream(int cid, ObjectInputStream ois) throws IOException, ClassNotFoundException {
-        Event.Type e = Event.Type.values()[ois.readInt()];
+        /*Event.Type e = Event.Type.values()[ois.readInt()];
         switch (e){
             case PiecePlaced:{
                 return new Event(e,
@@ -135,7 +135,10 @@ public class GameServer {
             }
             default: return null;
 
-        }
+        }*/
+        return new Event(Event.Type.PiecePlaced,
+                new Point(ois.readInt(), ois.readInt()),
+                new Tile(cid));
     }
 
     public void update_tiles(long now) {
