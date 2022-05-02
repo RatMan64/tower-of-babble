@@ -13,9 +13,12 @@ import java.time.Instant;
 
 public class GameServer {
     public final int MAX_TILE_AGE = 10;
+    public enum EventType {
+        PiecePlaced,
+    }
 
-    public ConcurrentLinkedQueue<Event> in_events;
-    public ConcurrentLinkedQueue<Event> out_events;
+    public ConcurrentLinkedQueue<GameEvent> in_events;
+    public ConcurrentLinkedQueue<GameEvent> out_events;
     public ArrayList<ObjectOutputStream> out_streams;
     public ArrayList<Socket> conns;
     public HashMap<Point, Tile> tile_list;
@@ -38,9 +41,10 @@ public class GameServer {
             final ObjectInputStream ois = new ObjectInputStream(conn.getInputStream());
 
             new Thread(() -> {
+                int cid = client_id;
                 while (true) {
                     try {
-                        in_events.add((Event) ois.readObject());
+                        in_events.add(getEventFromStream(cid, ois));
                     } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
                         System.exit(-1);
@@ -51,6 +55,7 @@ public class GameServer {
             //(Kevin) Handle output streams
             final var oos = new ObjectOutputStream(conn.getOutputStream());
             oos.writeInt(client_id++);
+
             oos.writeInt(tile_list.size());
             for (Map.Entry<Point, Tile> entry : tile_list.entrySet()) {
                 Point p = entry.getKey();
@@ -58,6 +63,7 @@ public class GameServer {
                 oos.writeInt(p.y);
             }
             oos.flush();
+
             out_streams.add(oos);
             System.out.println("connected client: "+(client_id-1));
         }
@@ -99,19 +105,35 @@ public class GameServer {
             long diff = Duration.between(lastTime, newTime).toMillis();
             lastTime = newTime;
 
-            for(Event e = in_events.poll(); e != null; e = in_events.poll())
-                handle_event(e);
+            for(GameEvent ge = in_events.poll(); ge != null; ge = in_events.poll())
+                handle_event(ge);
 
             update_tiles(diff);
 
         }
     }
 
-    private void handle_event(Event e){
+    public void handle_event(GameEvent ge) {
 
     }
 
-    private void update_tiles(long diff) {
+    public GameEvent getEventFromStream(int cid, ObjectInputStream ois) {
+        int event = ois.readInt();
+        EventType type;
+        if (event == 0)
+            type = EventType.PiecePlaced;
+
+        if (type == EventType.PiecePlaced) {
+            int x = ois.readInt();
+            int y = ois.readInt();
+
+            return new GameEvent(type, new Point(x, y), new Tile(cid));
+        }
+
+        return null;
+    }
+
+    public void update_tiles(long diff) {
         for (Map.Entry<Point, Tile> entry : tile_list.entrySet()) {
             Point key = entry.getKey();
             Tile value = entry.getValue();
@@ -123,7 +145,19 @@ public class GameServer {
         }
     }
 
-    private class Tile {
+    public class GameEvent {
+        EventType type;
+        Point point;
+        Tile tile;
+
+        public GameEvent(EventType type, Point point, Tile tile) {
+            this.type = type;
+            this.point = point;
+            this.tile = tile;
+        }
+    }
+
+    public class Tile {
         private long age;
         public int owner_id;
 
@@ -149,7 +183,7 @@ public class GameServer {
 
     }
 
-    private class Point implements Comparable<Point> {
+    public class Point implements Comparable<Point> {
         public int x;
         public int y;
 
