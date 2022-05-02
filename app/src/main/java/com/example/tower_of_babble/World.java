@@ -40,10 +40,20 @@ public class World {
         //millisseconds till tile is finalized, and placed permanently
         private int msTillPlace;
 
+        private boolean reachableAbove;
+        private boolean reachableBelow;
+        private boolean reachableRight;
+        private boolean reachableLeft;
+
+
         public Tile() {
             state = TileState.UNREACHABLE;
             placedTile = null;
             msTillPlace = 0;
+            reachableAbove = false;
+            reachableBelow = false;
+            reachableLeft = false;
+            reachableRight = false;
         }
 
         // start the count down to place a tile
@@ -70,6 +80,22 @@ public class World {
         }
     }
 
+    private class PlaceableChecker {
+        private boolean needsLeft;
+        private boolean needsRight;
+        private boolean needsAbove;
+        private boolean needsBelow;
+
+        public PlaceableChecker(boolean needsLeft_, boolean needsRight_, boolean needsAbove_, boolean needsBelow_) {
+            needsLeft = needsLeft_;
+            needsRight = needsRight_;
+            needsAbove = needsAbove_;
+            needsBelow = needsBelow_;
+        }
+    }
+
+    private HashMap<String, PlaceableChecker> placements;
+
     private final int width;
     private final int height;
 
@@ -94,25 +120,61 @@ public class World {
         // mark the bottom row reachable
         for(int col = 0; col != width; ++col) {
             map.get(height - 1).get(col).state = TileState.REACHABLE;
+            map.get(height-1).get(col).reachableBelow = true;
         }
 
         imgs = new HashMap<>();
         imgs.put("2a", new GameObject(0, 0, 16, 16, BitmapFactory.decodeResource(surfaceView.getResources(), R.drawable.tower_2a)));
         imgs.put("2b", new GameObject(0, 0, 16, 16, BitmapFactory.decodeResource(surfaceView.getResources(), R.drawable.tower_2b)));
         imgs.put("2c", new GameObject(0, 0, 16, 16, BitmapFactory.decodeResource(surfaceView.getResources(), R.drawable.tower_2c)));
+        imgs.put("2d", new GameObject(0, 0, 16, 16, BitmapFactory.decodeResource(surfaceView.getResources(), R.drawable.tower_2d)));
+        imgs.put("2e", new GameObject(0, 0, 16, 16, BitmapFactory.decodeResource(surfaceView.getResources(), R.drawable.tower_2e)));
+
 
         imgs.put("3a", new GameObject(0, 0, 16, 16, BitmapFactory.decodeResource(surfaceView.getResources(), R.drawable.tower_3a)));
         imgs.put("3b", new GameObject(0, 0, 16, 16, BitmapFactory.decodeResource(surfaceView.getResources(), R.drawable.tower_3b)));
+        imgs.put("3c", new GameObject(0, 0, 16, 16, BitmapFactory.decodeResource(surfaceView.getResources(), R.drawable.tower_3c)));
+        imgs.put("3d", new GameObject(0, 0, 16, 16, BitmapFactory.decodeResource(surfaceView.getResources(), R.drawable.tower_3d)));
 
         imgs.put("4a", new GameObject(0, 0, 16, 16, BitmapFactory.decodeResource(surfaceView.getResources(), R.drawable.tower_4a)));
 
         imgs.put("empty", new GameObject(0, 0, 16, 16, BitmapFactory.decodeResource(surfaceView.getResources(), R.drawable.empty_plot)));
+
+        imgs.put("placing", new GameObject(0, 0, 16, 16, BitmapFactory.decodeResource(surfaceView.getResources(), R.drawable.placing)));
+
+
+        placements = new HashMap<>();
+        placements.put("2a", new PlaceableChecker(false, false, true, true));
+        placements.put("2b", new PlaceableChecker(false, true, false, true));
+        placements.put("2c", new PlaceableChecker(true, false, false, true));
+        placements.put("2d", new PlaceableChecker(true, false, true, false));
+        placements.put("2e", new PlaceableChecker(false, true, true, false));
+
+        placements.put("3a", new PlaceableChecker(true, false, true, true));
+        placements.put("3b", new PlaceableChecker(false, true, true, true));
+        placements.put("3c", new PlaceableChecker(true, true, true, false));
+        placements.put("3d", new PlaceableChecker(true, true, false, true));
+
+        placements.put("4a", new PlaceableChecker(true, true, true, true));
     }
 
     // request to place a tile at x, y on the map. Should send a request to the server.
     public void requestPlace(int x, int y, String placedTile) {
         // This is temporary client code. Should be replaced by a request to the server
-        beginPlace(x, y, placedTile);
+        tryBeginPlace(x, y, placedTile);
+    }
+
+    public boolean tryBeginPlace(int x, int y, String placedTile) {        Tile t = map.get(y).get(x);
+        if(t.state == TileState.REACHABLE) {
+            if(t.reachableAbove && placements.get(placedTile).needsAbove ||
+                    t.reachableBelow && placements.get(placedTile).needsBelow ||
+                    t.reachableLeft && placements.get(placedTile).needsLeft ||
+                    t.reachableRight && placements.get(placedTile).needsRight) {
+                beginPlace(x, y, placedTile);
+                return true;
+            }
+        }
+        return false;
     }
 
     // start placing a tile at x, y on the map. Used server side to place tiles
@@ -121,9 +183,15 @@ public class World {
     }
 
     public boolean tryPlaceTile(int x, int y, String placedTile) {
-        if(map.get(y).get(x).state == TileState.REACHABLE) {
-            placeTile(x, y, placedTile);
-            return true;
+        Tile t = map.get(y).get(x);
+        if(t.state == TileState.REACHABLE) {
+            if(t.reachableAbove && placements.get(placedTile).needsAbove ||
+                t.reachableBelow && placements.get(placedTile).needsBelow ||
+                t.reachableLeft && placements.get(placedTile).needsLeft ||
+                t.reachableRight && placements.get(placedTile).needsRight) {
+                placeTile(x, y, placedTile);
+                return true;
+            }
         }
         return false;
     }
@@ -136,59 +204,67 @@ public class World {
     }
 
     public void updateSurrounding(int x, int y, String placedTile) {
-        if(placedTile.equals("2a") || placedTile.equals("3a") || placedTile.equals("3b") || placedTile.equals("4a")) {
-            //above
+
+        if(placements.get(placedTile).needsAbove) {
             int targetY = y - 1;
             if(targetY >= 0) {
                 Tile t = map.get(targetY).get(x);
-                if(t.state == TileState.UNREACHABLE) {
-                    map.get(targetY).get(x).state = TileState.REACHABLE;
-                }
-            }
-
-            //below
-            targetY = y + 1;
-            if(targetY < height) {
-                Tile t = map.get(targetY).get(x);
-                if(t.state == TileState.UNREACHABLE) {
-                    map.get(targetY).get(x).state = TileState.REACHABLE;
+                if(t.state == TileState.UNREACHABLE || t.state == TileState.REACHABLE) {
+                    t.state = TileState.REACHABLE;
+                    t.reachableBelow = true;
                 }
             }
         }
 
+        if(placements.get(placedTile).needsBelow) {
+            int targetY = y + 1;
+            if(targetY < height) {
+                Tile t = map.get(targetY).get(x);
+                if(t.state == TileState.UNREACHABLE || t.state == TileState.REACHABLE) {
+                    t.state = TileState.REACHABLE;
+                    t.reachableAbove = true;
+                }
+            }
+        }
 
-        //left
-        if(placedTile.equals("2c") || placedTile.equals("3a") || placedTile.equals("4a")) {
+        if(placements.get(placedTile).needsLeft) {
             int targetX = x - 1;
             if(targetX >= 0) {
                 Tile t = map.get(y).get(targetX);
-                if(t.state == TileState.UNREACHABLE) {
-                    map.get(y).get(targetX).state = TileState.REACHABLE;
+                if(t.state == TileState.UNREACHABLE || t.state == TileState.REACHABLE) {
+                    t.state = TileState.REACHABLE;
+                    t.reachableRight = true;
                 }
             }
+
         }
 
-        //right
-        if(placedTile.equals("2b") || placedTile.equals("3b") || placedTile.equals("4a")) {
+        if(placements.get(placedTile).needsRight) {
             int targetX = x + 1;
             if(targetX < width) {
                 Tile t = map.get(y).get(targetX);
-                if(t.state == TileState.UNREACHABLE) {
-                    map.get(y).get(targetX).state = TileState.REACHABLE;
+                if(t.state == TileState.UNREACHABLE || t.state == TileState.REACHABLE) {
+                    t.state = TileState.REACHABLE;
+                    t.reachableLeft = true;
                 }
             }
+
         }
     }
 
     public void update(int msElapsed) {
+        int y = 0;
         for(ArrayList<Tile> row : map) {
+            int x = 0;
             for(Tile tile : row) {
                 boolean wasPlaced = tile.state != TileState.PLACED;
                 tile.update(msElapsed);
                 if(!wasPlaced && tile.state == TileState.PLACED) {
-
+                    updateSurrounding(x, y, tile.placedTile);
                 }
+                ++x;
             }
+            ++y;
         }
     }
 
@@ -204,6 +280,10 @@ public class World {
                     }
                     case PLACED: {
                         renderImg = imgs.get(tile.placedTile);
+                        break;
+                    }
+                    case PLACING: {
+                        renderImg = imgs.get("placing");
                         break;
                     }
                 }

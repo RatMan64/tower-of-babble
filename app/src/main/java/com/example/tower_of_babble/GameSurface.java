@@ -31,6 +31,8 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     private int prevX = 0;
     private int prevY = 0;
 
+    private long prevTimeMs = 0;
+
     public GameSurface(Context context)  {
         super(context);
 
@@ -42,6 +44,10 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void update()  {
+        long currTimeMs = System.currentTimeMillis();
+        int elapsed = (int)(currTimeMs - prevTimeMs);
+        world.update(elapsed);
+        prevTimeMs = currTimeMs;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -87,7 +93,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
                         int worldX = (int) (upX - cam.getX()) / 160;
                         int worldY = (int) (upY - cam.getY()) / 160;
                         if(worldX >= 0 && worldX < 10 && worldY >= 0 && worldY < 10) {
-                            world.tryPlaceTile(worldX, worldY, currentSelectedTag);
+                            world.requestPlace(worldX, worldY, currentSelectedTag);
                         }
                     }
                 }
@@ -128,6 +134,16 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
         twr2Cobj.setBmp(twr2Cimg);
         firstOption.addSubOption("2c", twr2Cobj);
 
+        Bitmap twr2dimg = BitmapFactory.decodeResource(this.getResources(), R.drawable.tower_2d);
+        GameObject twr2dobj = new GameObject(0, 0, 16, 16);
+        twr2dobj.setBmp(twr2dimg);
+        firstOption.addSubOption("2d", twr2dobj);
+
+        Bitmap twr2eimg = BitmapFactory.decodeResource(this.getResources(), R.drawable.tower_2e);
+        GameObject twr2eobj = new GameObject(0, 0, 16, 16);
+        twr2eobj.setBmp(twr2eimg);
+        firstOption.addSubOption("2e", twr2eobj);
+
         menu.add(firstOption);
 
         MenuOption secondOption = new MenuOption(this, 400, 10);
@@ -141,6 +157,16 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
         GameObject twr3Bobj = new GameObject(0, 0, 16, 16);
         twr3Bobj.setBmp(twr3Bimg);
         secondOption.addSubOption("3b", twr3Bobj);
+
+        Bitmap twr3cimg = BitmapFactory.decodeResource(this.getResources(), R.drawable.tower_3c);
+        GameObject twr3cobj = new GameObject(0, 0, 16, 16);
+        twr3cobj.setBmp(twr3cimg);
+        secondOption.addSubOption("3c", twr3cobj);
+
+        Bitmap twr3dimg = BitmapFactory.decodeResource(this.getResources(), R.drawable.tower_3d);
+        GameObject twr3dobj = new GameObject(0, 0, 16, 16);
+        twr3dobj.setBmp(twr3dimg);
+        secondOption.addSubOption("3d", twr3dobj);
 
         menu.add(secondOption);
 
