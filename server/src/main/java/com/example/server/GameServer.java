@@ -51,6 +51,12 @@ public class GameServer {
             //(Kevin) Handle output streams
             final var oos = new ObjectOutputStream(conn.getOutputStream());
             oos.writeInt(client_id++);
+            oos.writeInt(tile_list.size());
+            for (Map.Entry<Point, Tile> entry : tile_list.entrySet()) {
+                Point p = entry.getKey();
+                oos.writeInt(p.x);
+                oos.writeInt(p.y);
+            }
             oos.flush();
             out_streams.add(oos);
             System.out.println("connected client: "+(client_id-1));
