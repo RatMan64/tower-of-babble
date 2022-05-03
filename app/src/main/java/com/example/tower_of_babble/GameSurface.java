@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.os.Build;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -21,6 +22,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     World world = new World(10, 10, this);
     MenuOption last;
     String currentSelectedTag;
+    int startmenu=1 ;
 
     // track if the user panned the camera.
     boolean moved;
@@ -53,7 +55,11 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if(startmenu == 1){
+            startmenu =0;
+        }
         switch (event.getAction() & MotionEvent.ACTION_MASK) {
+
             case MotionEvent.ACTION_DOWN: {
                 prevX =  (int)event.getX();
                 prevY = (int)event.getY();
@@ -105,17 +111,23 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void draw(Canvas canvas)  {
-        super.draw(canvas);
-        for(MenuOption frame : menu) {
-            frame.draw(canvas, menuCam);
+
+        if(startmenu!=1){
+            super.draw(canvas);
+            for(MenuOption frame : menu) {
+                frame.draw(canvas, menuCam);
+            }
+            world.draw(canvas, cam);
+
         }
-        world.draw(canvas, cam);
+
     }
 
     // Implements method of SurfaceHolder.Callback
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         Bitmap frame = BitmapFactory.decodeResource(this.getResources(), R.drawable.frame);
+
 
         MenuOption firstOption = new MenuOption(this, 100, 10);
 
