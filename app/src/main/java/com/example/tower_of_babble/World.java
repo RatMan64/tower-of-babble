@@ -37,7 +37,7 @@ public class World {
         // Holds the queued tile when placing, and the placed tile when placed
         private String placedTile;
 
-        //millisseconds till tile is finalized, and placed permanently
+        //milliseconds til tile is finalized, and placed permanently
         private int msTillPlace;
 
         private boolean reachableAbove;

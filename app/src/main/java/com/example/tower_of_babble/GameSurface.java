@@ -66,6 +66,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
                 prevX =  (int)event.getX();
                 prevY = (int)event.getY();
                 moved = false;
+                //check if finger is over a tile they can place
                 return true;
             }
             case MotionEvent.ACTION_MOVE: {
