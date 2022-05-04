@@ -4,8 +4,11 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Build;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -21,6 +24,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     World world = new World(10, 10, this);
     MenuOption last;
     String currentSelectedTag;
+    int startmenu=1 ; // Riley for the begging
 
     // track if the user panned the camera.
     boolean moved;
@@ -53,11 +57,16 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if(startmenu == 1){ //riley switch to the game
+            startmenu =0;
+        }
         switch (event.getAction() & MotionEvent.ACTION_MASK) {
+
             case MotionEvent.ACTION_DOWN: {
                 prevX =  (int)event.getX();
                 prevY = (int)event.getY();
                 moved = false;
+                //check if finger is over a tile they can place
                 return true;
             }
             case MotionEvent.ACTION_MOVE: {
@@ -105,17 +114,35 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void draw(Canvas canvas)  {
+
         super.draw(canvas);
-        for(MenuOption frame : menu) {
-            frame.draw(canvas, menuCam);
+        if(startmenu!=1){ // dont draw game until palyer starts
+
+            for(MenuOption frame : menu) {
+                frame.draw(canvas, menuCam);
+            }
+            world.draw(canvas, cam);
+
+        }else{
+            // riley title and instuctions
+            String title = "Tower of Babble";
+            Paint paint = new Paint();
+            paint.setColor(Color.WHITE);
+            paint.setTextSize(50);
+            float x =getWidth()/3;
+            float y = getHeight()/3;
+            canvas.drawText(title,x,y,paint );
+            String instuction = "tap anywhere to begin";
+            canvas.drawText(instuction, x, y+100, paint);
         }
-        world.draw(canvas, cam);
+
     }
 
     // Implements method of SurfaceHolder.Callback
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         Bitmap frame = BitmapFactory.decodeResource(this.getResources(), R.drawable.frame);
+
 
         MenuOption firstOption = new MenuOption(this, 100, 10);
 
