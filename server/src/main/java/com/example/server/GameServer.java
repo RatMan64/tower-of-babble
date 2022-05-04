@@ -148,13 +148,13 @@ public class GameServer {
     public Object[] tile_to_arr(Map.Entry<Point, Tile> e){
         Tile t = e.getValue();
         Point p = e.getKey();
-        return new Object[]{ p.x, p.y, t.getAge(), t.owner_id };
+        return new Object[]{ p.x, p.y, t.getAge(), t.owner_id, t.tile_type };
     }
 
     public Object[] tile_to_arr(Event e){
         Tile t = e.tile;
         Point p = e.point;
-        return new Object[]{ p.x, p.y, t.getAge(), t.owner_id };
+        return new Object[]{ p.x, p.y, t.getAge(), t.owner_id, t.tile_type };
     }
 
     public class Event {

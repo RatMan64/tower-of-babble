@@ -47,7 +47,7 @@ public class GameThread extends Thread{
                 } catch (ClassNotFoundException | IOException e) {
                     e.printStackTrace();
                 }
-                gameSurface.world.placeTile((int)initialTiles[0], (int)initialTiles[1], initialTiles[3].toString());
+                gameSurface.world.placeTile((int)initialTiles[0], (int)initialTiles[1], initialTiles[4].toString());
             }
         }).start();
     }
