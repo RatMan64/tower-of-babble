@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Build;
 import android.util.Log;
 import android.view.Menu;
@@ -22,7 +24,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     World world = new World(10, 10, this);
     MenuOption last;
     String currentSelectedTag;
-    int startmenu=1 ;
+    int startmenu=1 ; // Riley for the begging
 
     // track if the user panned the camera.
     boolean moved;
@@ -55,7 +57,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if(startmenu == 1){
+        if(startmenu == 1){ //riley switch to the game
             startmenu =0;
         }
         switch (event.getAction() & MotionEvent.ACTION_MASK) {
@@ -112,13 +114,25 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void draw(Canvas canvas)  {
 
-        if(startmenu!=1){
-            super.draw(canvas);
+        super.draw(canvas);
+        if(startmenu!=1){ // dont draw game until palyer starts
+
             for(MenuOption frame : menu) {
                 frame.draw(canvas, menuCam);
             }
             world.draw(canvas, cam);
 
+        }else{
+            // riley title and instuctions
+            String title = "Tower of Babble";
+            Paint paint = new Paint();
+            paint.setColor(Color.WHITE);
+            paint.setTextSize(50);
+            float x =getWidth()/3;
+            float y = getHeight()/3;
+            canvas.drawText(title,x,y,paint );
+            String instuction = "tap anywhere to begin";
+            canvas.drawText(instuction, x, y+100, paint);
         }
 
     }
