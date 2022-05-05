@@ -3,6 +3,7 @@ package com.example.tower_of_babble;
 import android.graphics.Canvas;
 import android.view.SurfaceHolder;
 
+import com.example.server.GameServer;
 import com.example.server.Point;
 import com.example.server.Tile;
 
@@ -19,6 +20,9 @@ public class GameThread extends Thread{
     private int user_id;
     private Socket socket;
 
+    private ObjectInputStream ois;
+    private ObjectOutputStream oos;
+
     public GameThread(GameSurface gameSurface, SurfaceHolder surfaceHolder)  {
         this.gameSurface= gameSurface;
         this.surfaceHolder= surfaceHolder;
@@ -30,24 +34,28 @@ public class GameThread extends Thread{
         System.out.println("got conn");
 
 
-        var oos = new ObjectOutputStream(socket.getOutputStream());
-        var ois = new ObjectInputStream(socket.getInputStream());
+        oos = new ObjectOutputStream(socket.getOutputStream());
+        ois = new ObjectInputStream(socket.getInputStream());
+
+        this.gameSurface.oos = oos;
 
         System.out.println("reading int");
         user_id = ois.readInt();
         System.out.println("got id: " + user_id);
 
+        this.gameSurface.id = user_id;
+
         //upon just joining if some tiles are already placed
         //need to stop it?
         new Thread(() -> {
             while(true){
-                Object[] initialTiles = new Object[0];
                 try {
-                    initialTiles = (Object[]) ois.readObject();
+                    Tile t = new Tile((Object[]) ois.readObject());
+                    Point p = new Point((Object[]) ois.readObject());
+                    gameSurface.world.beginPlace(p.x, p.y, t.tile_type);
                 } catch (ClassNotFoundException | IOException e) {
                     e.printStackTrace();
                 }
-                gameSurface.world.placeTile((int)initialTiles[0], (int)initialTiles[1], initialTiles[4].toString());
             }
         }).start();
     }
@@ -62,17 +70,7 @@ public class GameThread extends Thread{
         }
 
         long startTime = System.nanoTime();
-        try {
-            var oos = new ObjectOutputStream(socket.getOutputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        ObjectInputStream ois = null;
-        try {
-            ois = new ObjectInputStream(socket.getInputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
         Object[] tileArray;
         while(running) {
             Canvas canvas = null;

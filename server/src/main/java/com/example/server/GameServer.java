@@ -79,6 +79,7 @@ public class GameServer {
                         Tile t = new Tile((Object[]) ois.readObject());
                         Point p = new Point((Object[]) ois.readObject());
                         in_events.add(new Event(p,t));
+                        System.out.println("Received tile event.");
                     } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
                         System.exit(-1);
@@ -93,7 +94,7 @@ public class GameServer {
 
             grid_lock.lock();
             tile_list.entrySet().stream()
-                    .map(this::tile_to_arr)
+                    .map(GameServer::tile_to_arr)
 //                    .forEach(oos::writeObject); could be like this but lol exceptions
                     .forEach(e -> {
                         try {
@@ -145,19 +146,19 @@ public class GameServer {
     }
 
 
-    public Object[] tile_to_arr(Map.Entry<Point, Tile> e){
+    public static Object[] tile_to_arr(Map.Entry<Point, Tile> e){
         Tile t = e.getValue();
         Point p = e.getKey();
         return new Object[]{ p.x, p.y, t.getAge(), t.owner_id, t.tile_type };
     }
 
-    public Object[] tile_to_arr(Event e){
+    public static Object[] tile_to_arr(Event e){
         Tile t = e.tile;
         Point p = e.point;
         return new Object[]{ p.x, p.y, t.getAge(), t.owner_id, t.tile_type };
     }
 
-    public class Event {
+    public static class Event {
         Point point;
         Tile tile;
 

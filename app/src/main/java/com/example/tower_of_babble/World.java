@@ -19,6 +19,10 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import com.example.server.GameServer;
+import com.example.server.Point;
+
+import java.io.ObjectOutputStream;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -158,19 +162,28 @@ public class World {
         placements.put("4a", new PlaceableChecker(true, true, true, true));
     }
 
-    // request to place a tile at x, y on the map. Should send a request to the server.
-    public void requestPlace(int x, int y, String placedTile) {
-        // This is temporary client code. Should be replaced by a request to the server
-        tryBeginPlace(x, y, placedTile);
-    }
-
-    public boolean tryBeginPlace(int x, int y, String placedTile) {        Tile t = map.get(y).get(x);
+    public boolean tryBeginPlace(int x, int y, String placedTile, ObjectOutputStream oos, int id) {
+        Tile t = map.get(y).get(x);
         if(t.state == TileState.REACHABLE) {
             if(t.reachableAbove && placements.get(placedTile).needsAbove ||
                     t.reachableBelow && placements.get(placedTile).needsBelow ||
                     t.reachableLeft && placements.get(placedTile).needsLeft ||
                     t.reachableRight && placements.get(placedTile).needsRight) {
                 beginPlace(x, y, placedTile);
+
+                Log.d("tryBeginPlace", "beginning request to server");
+                // send request to server
+                com.example.server.Tile tile = new com.example.server.Tile(0, id, placedTile);
+                Point p = new Point(x, y);
+                GameServer.Event e = new GameServer.Event(p, tile);
+                try {
+                    oos.writeObject(GameServer.tile_to_arr(e));
+                    oos.flush();
+                    Log.d("tryBeginPlace", "sent request to server!");
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                }
+
                 return true;
             }
         }

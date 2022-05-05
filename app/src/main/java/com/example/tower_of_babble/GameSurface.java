@@ -15,6 +15,7 @@ import android.view.SurfaceView;
 
 import androidx.annotation.RequiresApi;
 
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
@@ -36,6 +37,9 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     private int prevY = 0;
 
     private long prevTimeMs = 0;
+
+    public ObjectOutputStream oos;
+    public int id;
 
     public GameSurface(Context context)  {
         super(context);
@@ -102,7 +106,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
                         int worldX = (int) (upX - cam.getX()) / 160;
                         int worldY = (int) (upY - cam.getY()) / 160;
                         if(worldX >= 0 && worldX < 10 && worldY >= 0 && worldY < 10) {
-                            world.requestPlace(worldX, worldY, currentSelectedTag);
+                            world.tryBeginPlace(worldX, worldY, currentSelectedTag, oos, id);
                         }
                     }
                 }

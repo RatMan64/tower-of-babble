@@ -23,9 +23,10 @@ public class Tile {
 
     }
 
-    public Tile(long age, int owner_id) {
+    public Tile(long age, int owner_id, String tile_type) {
         this.age = age;
         this.owner_id = owner_id;
+        this.tile_type = tile_type;
     }
 
     public Object[] to_obj_arr(){
