@@ -12,6 +12,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+// run the game loop
 public class GameThread extends Thread{
 
     private boolean running;
@@ -30,7 +31,7 @@ public class GameThread extends Thread{
     private void setup() throws IOException, ClassNotFoundException {
 
         // (kevin) 10.0.2.2 is the emulator host's localhost alias
-        socket = new Socket("10.0.2.2", 8989);
+        socket = new Socket("206.189.161.67", 8989);
         System.out.println("got conn");
 
 
@@ -50,9 +51,12 @@ public class GameThread extends Thread{
         new Thread(() -> {
             while(true){
                 try {
-                    Tile t = new Tile((Object[]) ois.readObject());
-                    Point p = new Point((Object[]) ois.readObject());
+                    Object[] arr = (Object[]) ois.readObject();
+                    Point p = new Point((int)arr[0], (int)arr[1]);
+                    Tile t = new Tile((long)arr[2], (int)arr[3], (String)arr[4]);
+
                     gameSurface.world.beginPlace(p.x, p.y, t.tile_type);
+
                 } catch (ClassNotFoundException | IOException e) {
                     e.printStackTrace();
                 }

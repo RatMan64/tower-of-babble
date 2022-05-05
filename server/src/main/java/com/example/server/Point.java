@@ -1,5 +1,6 @@
 package com.example.server;
 
+// an abstraction for a 2d position we should have made sooner
 public class Point {
     public int x;
     public int y;

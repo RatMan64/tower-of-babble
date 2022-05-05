@@ -11,6 +11,7 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.tower_of_babble.databinding.FragmentFirstBinding;
 
+// i don't know what a fragment is
 public class FirstFragment extends Fragment {
 
     private FragmentFirstBinding binding;

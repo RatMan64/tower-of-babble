@@ -7,6 +7,7 @@ import android.view.SurfaceView;
 
 import java.util.ArrayList;
 
+// a menu option with multiple selections
 public class MenuOption {
     private class SubOption {
         private String tag;

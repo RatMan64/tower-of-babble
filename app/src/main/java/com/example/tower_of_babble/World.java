@@ -26,7 +26,9 @@ import java.io.ObjectOutputStream;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
+// manages the tile map, tiles, and there states
 public class World {
     public enum TileState {
         UNREACHABLE,
@@ -75,6 +77,8 @@ public class World {
         public void update(int msElapsed) {
             switch (state) {
                 case PLACING: {
+                    // I'm sorry to everyone that sees this.
+                    if(msTillPlace > 5000) msTillPlace = 0;
                     msTillPlace -= msElapsed;
                     if (msTillPlace < 0) {
                         state = TileState.PLACED;
@@ -162,9 +166,9 @@ public class World {
         placements.put("4a", new PlaceableChecker(true, true, true, true));
     }
 
-    public boolean tryBeginPlace(int x, int y, String placedTile, ObjectOutputStream oos, int id) {
+    public boolean tryBeginPlace(int x, int y, String placedTile, ConcurrentLinkedQueue<GameServer.Event> out_events, int id) {
         Tile t = map.get(y).get(x);
-        if(t.state == TileState.REACHABLE) {
+        if(t.state == TileState.REACHABLE || t.state == TileState.PLACING) {
             if(t.reachableAbove && placements.get(placedTile).needsAbove ||
                     t.reachableBelow && placements.get(placedTile).needsBelow ||
                     t.reachableLeft && placements.get(placedTile).needsLeft ||
@@ -176,13 +180,7 @@ public class World {
                 com.example.server.Tile tile = new com.example.server.Tile(0, id, placedTile);
                 Point p = new Point(x, y);
                 GameServer.Event e = new GameServer.Event(p, tile);
-                try {
-                    oos.writeObject(GameServer.tile_to_arr(e));
-                    oos.flush();
-                    Log.d("tryBeginPlace", "sent request to server!");
-                } catch (Exception e1) {
-                    e1.printStackTrace();
-                }
+                out_events.add(e);
 
                 return true;
             }
@@ -193,6 +191,7 @@ public class World {
     // start placing a tile at x, y on the map. Used server side to place tiles
     public void beginPlace(int x, int y, String placedTile) {
         map.get(y).get(x).beginPlacing(placedTile);
+        Log.d("beginPlace", "Trying to place " + placedTile + " at " + x + ", " + y);
     }
 
     public boolean tryPlaceTile(int x, int y, String placedTile) {

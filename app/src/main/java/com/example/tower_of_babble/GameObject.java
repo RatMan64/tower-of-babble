@@ -3,6 +3,7 @@ package com.example.tower_of_babble;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 
+// wrap an image with its position, use a camera as an offset for rendering
 public class GameObject {
     private float x;
     private float y;

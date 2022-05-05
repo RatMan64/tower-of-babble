@@ -1,5 +1,6 @@
 package com.example.tower_of_babble;
 
+// camera management class, generally just handles render offset
 public class Camera {
     private float x;
     private float y;

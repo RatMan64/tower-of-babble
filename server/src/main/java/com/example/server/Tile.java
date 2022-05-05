@@ -3,6 +3,7 @@ package com.example.server;
 
 import java.util.Arrays;
 
+// a second, cleaner abstraction of tiles for server side use
 public class Tile {
     private long age;
     public final int owner_id;

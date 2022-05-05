@@ -1,5 +1,6 @@
 package com.example.server;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -11,7 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
-
+// the server, basically just vomits positions to the clients
 public class GameServer {
 
     public ConcurrentLinkedQueue<Event> in_events;
@@ -45,16 +46,17 @@ public class GameServer {
             while (true){
                 var e = out_events.poll();
                 if (e == null) continue;
+                ArrayList<ObjectOutputStream> toRemove = new ArrayList<>();
                 for(ObjectOutputStream oos : out_streams){
                     try {
                         Object[] a = tile_to_arr(e);
                         oos.writeObject(a);
                         oos.flush();
                     } catch (IOException ex) {
-                        ex.printStackTrace();
-                        System.exit(-1);
+                        toRemove.add(oos);
                     }
                 }
+                out_streams.removeAll(toRemove);
             }
         }).start();
     }
@@ -76,13 +78,13 @@ public class GameServer {
             new Thread(() -> {
                 while (true) {
                     try {
-                        Tile t = new Tile((Object[]) ois.readObject());
-                        Point p = new Point((Object[]) ois.readObject());
+                        Object[] arr = (Object[]) ois.readObject();
+                        Point p = new Point((int)arr[0], (int)arr[1]);
+                        Tile t = new Tile((long)arr[2], (int)arr[3], (String)arr[4]);
                         in_events.add(new Event(p,t));
                         System.out.println("Received tile event.");
                     } catch (IOException | ClassNotFoundException e) {
-                        e.printStackTrace();
-                        System.exit(-1);
+                        break;
                     }
                 }
             }).start();

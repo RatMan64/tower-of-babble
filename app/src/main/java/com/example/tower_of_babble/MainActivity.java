@@ -18,6 +18,7 @@ import com.example.tower_of_babble.databinding.ActivityMainBinding;
 import android.view.Menu;
 import android.view.MenuItem;
 
+// no clue what this is
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration appBarConfiguration;

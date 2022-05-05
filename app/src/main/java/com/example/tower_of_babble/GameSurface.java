@@ -15,9 +15,14 @@ import android.view.SurfaceView;
 
 import androidx.annotation.RequiresApi;
 
+import com.example.server.GameServer;
+
+import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
+// this is where the core game logic
 public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     private GameThread gameThread;
 
@@ -25,7 +30,9 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     World world = new World(10, 10, this);
     MenuOption last;
     String currentSelectedTag;
-    int startmenu=1 ; // Riley for the begging
+    int startmenu=1 ; // Riley for the beginning
+
+    public ConcurrentLinkedQueue<GameServer.Event> out_events;
 
     // track if the user panned the camera.
     boolean moved;
@@ -43,14 +50,32 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
 
     public GameSurface(Context context)  {
         super(context);
+        out_events = new ConcurrentLinkedQueue<>();
 
         // Make Game Surface focusable so it can handle events. .
         this.setFocusable(true);
 
         // Sét callback.
         this.getHolder().addCallback(this);
+
+        //setup event writer thread
+        new Thread(() -> {
+            while (true){
+                var e = out_events.poll();
+                if (e == null) continue;
+                try {
+                    Object[] a = GameServer.tile_to_arr(e);
+                    oos.writeObject(a);
+                    oos.flush();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                    System.exit(-1);
+                }
+            }
+        }).start();
     }
 
+    //update tile delays
     public void update()  {
         long currTimeMs = System.currentTimeMillis();
         int elapsed = (int)(currTimeMs - prevTimeMs);
@@ -58,6 +83,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
         prevTimeMs = currTimeMs;
     }
 
+    //handle touches (camera panning, menu selection, placing)
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -81,9 +107,12 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
                 prevX = currX;
                 prevY = currY;
 
+                double dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                if(dist > 10) {
+                    cam.move(deltaX, deltaY);
+                    moved = true;
+                }
 
-                cam.move(deltaX, deltaY);
-                moved = true;
                 return true;
             }
             case MotionEvent.ACTION_UP: {
@@ -106,7 +135,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
                         int worldX = (int) (upX - cam.getX()) / 160;
                         int worldY = (int) (upY - cam.getY()) / 160;
                         if(worldX >= 0 && worldX < 10 && worldY >= 0 && worldY < 10) {
-                            world.tryBeginPlace(worldX, worldY, currentSelectedTag, oos, id);
+                            world.tryBeginPlace(worldX, worldY, currentSelectedTag, out_events, id);
                         }
                     }
                 }
@@ -116,6 +145,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
         return false;
     }
 
+    // render yay
     @Override
     public void draw(Canvas canvas)  {
 
@@ -129,7 +159,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
 
         }else{
             // riley title and instuctions
-            String title = "Tower of Babble";
+            String title = "Tower of Babel";
             Paint paint = new Paint();
             paint.setColor(Color.WHITE);
             paint.setTextSize(50);
