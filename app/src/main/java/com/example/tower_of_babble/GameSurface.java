@@ -30,9 +30,8 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     World world = new World(10, 10, this);
     MenuOption last;
     String currentSelectedTag;
-    int startmenu=1 ; // Riley for the beginning
-
     public ConcurrentLinkedQueue<GameServer.Event> out_events;
+    boolean startmenu=true; // Riley for the begging
 
     // track if the user panned the camera.
     boolean moved;
@@ -87,8 +86,8 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if(startmenu == 1){ //riley switch to the game
-            startmenu =0;
+        if(startmenu){ //riley switch to the game
+            startmenu = false;
         }
         switch (event.getAction() & MotionEvent.ACTION_MASK) {
 
@@ -150,7 +149,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     public void draw(Canvas canvas)  {
 
         super.draw(canvas);
-        if(startmenu!=1){ // dont draw game until palyer starts
+        if(!startmenu){ // dont draw game until palyer starts
 
             for(MenuOption frame : menu) {
                 frame.draw(canvas, menuCam);
